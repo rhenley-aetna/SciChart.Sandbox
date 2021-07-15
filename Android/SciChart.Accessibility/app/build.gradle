@@ -46,12 +46,13 @@ dependencies {
     implementation 'androidx.navigation:navigation-fragment-ktx:2.3.5'
     implementation 'androidx.navigation:navigation-ui-ktx:2.3.5'
 
-//    def sciChartVersion = '4.2.0.4625'
+//    def sciChartVersion = '4.2.0.4625' // Original sample SciChart library version
     def sciChartVersion = '4.3.0.4646'
     api(group: 'com.scichart.library', name: 'core', version: "$sciChartVersion", ext: 'aar')
     api(group: 'com.scichart.library', name: 'data', version: "$sciChartVersion", ext: 'aar')
     api(group: 'com.scichart.library', name: 'drawing', version: "$sciChartVersion", ext: 'aar')
     api(group: 'com.scichart.library', name: 'charting', version: "$sciChartVersion", ext: 'aar')
+    // Added SciChartBuilder API
     api(group: 'com.scichart.library', name: 'extensions', version: "$sciChartVersion", ext: 'aar')
 
 

@@ -62,6 +62,7 @@ class AccessibilityExampleFragment : Fragment() {
         SciChartBuilder.init(context);
         val sciChartBuilder: SciChartBuilder = SciChartBuilder.instance()
 
+        // Original sample's Axis definition code.
 //        val xAxis: NumericAxis = NumericAxis(context).apply {
 //            growBy = DoubleRange(0.1, 0.1)
 //        }
@@ -82,6 +83,7 @@ class AccessibilityExampleFragment : Fragment() {
         val surface: AccessibleSciChartSurface = binding.surface
         val nodes: ArrayList<INode> = surface.helper.nodes
 
+        // Original sample's XYDataSeries declaration.
 //        val ds: IXyDataSeries<Int, Int> = XyDataSeries<Int, Int>(
 //            Int::class.javaObjectType,
 //            Int::class.javaObjectType
@@ -94,12 +96,14 @@ class AccessibilityExampleFragment : Fragment() {
         )
             .withSeriesName("Column chart")
             .build()
-        val ds2: IXyDataSeries<Int, Int> = sciChartBuilder.newXyDataSeries<Int, Int>(
-            Int::class.javaObjectType,
-            Int::class.javaObjectType
-        )
-            .withSeriesName("Other chart")
-            .build()
+
+        // Second data series experiment.
+//        val ds2: IXyDataSeries<Int, Int> = sciChartBuilder.newXyDataSeries<Int, Int>(
+//            Int::class.javaObjectType,
+//            Int::class.javaObjectType
+//        )
+//            .withSeriesName("Other chart")
+//            .build()
 
         val yValues = intArrayOf(50, 35, 61, 58, 50, 50, 40, 53, 55, 23, 45, 12, 59, 60)
 
@@ -107,19 +111,24 @@ class AccessibilityExampleFragment : Fragment() {
             val yValue = yValues[i]
             ds.append(i, yValue)
 
-            nodes.add(ColumnPointNode(i, i.toDouble(), yValue.toDouble(), surface))
-            // Interleave the nodes for the two series:
+            // Second data series experiment - Interleave the nodes for the two series:
             // TalkBack reads each point in the second series immediately after the first series point with the same x-value
             // (Note: Can't select the second series columns by touch -- must flick to them in order.
-            // Issue is likely with ColumnPointNode selection bounds.)
-            val yValue2 = yValue - Random.nextInt(10)
-            ds2.append(i, yValue2)
-            nodes.add(ColumnPointNode(yValues.size + i, i.toDouble(), yValue2.toDouble(), surface))
+            // Issue is with ColumnPointNode selection bounds, which don't know about the other column,
+            // but the issue is fixable by putting the lower valued bar first in a11y node order,
+            // so its hit test is run first.)
+//            val yValue2 = yValue - Random.nextInt(10)
+//            ds2.append(i, yValue2)
+//            // insert the shorter node first...
+//            nodes.add(ColumnPointNode(yValues.size + i, i.toDouble(), yValue2.toDouble(), surface))
+
+            nodes.add(ColumnPointNode(i, i.toDouble(), yValue.toDouble(), surface))
         }
+        // Second data series experiment - Alternative sequence:
         // Add nodes for the second series after all of the nodes for the first series:
         // TalkBack reads the second series points in order after all of the first series points.
         // (Note: Can't select the second series columns by touch -- must flick to them in order.
-        // Issue is likely with ColumnPointNode selection bounds.)
+        // Issue is with ColumnPointNode selection bounds, which don't know about the other column.)
 //        for (i in yValues.indices) {
 //            val yValue2 = yValues[i] - Random.nextInt(10)
 //            ds2.append(i, yValue2)
@@ -134,13 +143,8 @@ class AccessibilityExampleFragment : Fragment() {
             .withDataSeries(ds)
             .build()
 
-        val r2Series: FastColumnRenderableSeries = sciChartBuilder.newColumnSeries()
-            .withStrokeStyle(ColorUtil.White, 1f, true)
-            .withDataPointWidth(0.7)
-            .withLinearGradientColors(ColorUtil.GreenYellow, ColorUtil.DarkOliveGreen)
-            .withDataSeries(ds2)
-            .build()
-
+        // Original sample's ColumnSeries definition.
+        // Note use of 1f.toDip() which gives same results as .withStrokeColor(..., 1f, ...)
 //        val rSeries: FastColumnRenderableSeries = FastColumnRenderableSeries().apply {
 //            strokeStyle = SolidPenStyle(ColorUtil.White, true, 1f.toDip(), null)
 //            dataPointWidth = 0.7
@@ -155,21 +159,22 @@ class AccessibilityExampleFragment : Fragment() {
 //            dataSeries = ds
 //        }
 
+        // Second data series experiment.
+//        val r2Series: FastColumnRenderableSeries = sciChartBuilder.newColumnSeries()
+//            .withStrokeStyle(ColorUtil.White, 1f, true)
+//            .withDataPointWidth(0.7)
+//            .withLinearGradientColors(ColorUtil.GreenYellow, ColorUtil.DarkOliveGreen)
+//            .withDataSeries(ds2)
+//            .build()
+
         UpdateSuspender.using(surface) {
             surface.xAxes.add(xAxis)
             surface.yAxes.add(yAxis)
-//            surface.xAxes.add(sciChartBuilder
-//                .newNumericAxis()
-//                .withAxisTitle("X Axis Title")
-//                .withGrowBy(0.1, 0.1)
-//                .build())
-//            surface.yAxes.add(sciChartBuilder
-//                .newNumericAxis()
-//                .withAxisTitle("Y Axis Title")
-//                .withGrowBy(0.0, 0.1)
-//                .build())
+
             surface.renderableSeries.add(rSeries)
-            surface.renderableSeries.add(r2Series)
+            // Second data series experiment.
+//            surface.renderableSeries.add(r2Series)
+
             val pinchZoomModifier = AccessiblePinchZoomModifier()
             val zoomPanModifier = AccessibleZoomPanModifier().apply {
                 receiveHandledEvents = true
@@ -198,6 +203,7 @@ class AccessibilityExampleFragment : Fragment() {
         }
     }
 
+    // Adjust for current displayMetrics; replaced by use of SciChartBuilder API.
     fun Float.toDip(): Float {
         return TypedValue.applyDimension(
             TypedValue.COMPLEX_UNIT_DIP,
