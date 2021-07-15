@@ -32,7 +32,7 @@ class ColumnPointNode(
         nodeInfo.setBoundsInParent(bounds)
         nodeInfo.setParent(surface)
         val format = DecimalFormat("0.##")
-        val text = String.format("Column with %s value", format.format(y))
+        val text = String.format("Column %s with value %s", format.format(x), format.format(y))
         nodeInfo.text = text
         nodeInfo.contentDescription = text
     }

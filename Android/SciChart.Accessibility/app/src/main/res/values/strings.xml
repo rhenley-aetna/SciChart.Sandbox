@@ -3,4 +3,5 @@
     <string name="action_settings">Settings</string>
     <!-- Strings used for fragments for navigation -->
     <string name="accessibility_fragment_label">Accessibility Fragment</string>
+    <string name="refresh">Refresh</string>
 </resources>

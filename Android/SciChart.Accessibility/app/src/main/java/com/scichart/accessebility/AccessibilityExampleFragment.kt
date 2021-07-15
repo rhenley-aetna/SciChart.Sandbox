@@ -28,41 +28,78 @@ import com.scichart.data.model.DoubleRange
 import com.scichart.drawing.common.LinearGradientBrushStyle
 import com.scichart.drawing.common.SolidPenStyle
 import com.scichart.drawing.utility.ColorUtil
+import com.scichart.extensions.builders.SciChartBuilder
 import java.util.*
+import kotlin.random.Random
 
 /**
  * A simple [Fragment] subclass as the default destination in the navigation.
  */
 class AccessibilityExampleFragment : Fragment() {
 
+    private lateinit var binding: AccessibilityExampleFragmentBinding
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        val binding = AccessibilityExampleFragmentBinding.inflate(inflater, container, false)
+        binding = AccessibilityExampleFragmentBinding.inflate(inflater, container, false)
 
         initExample(binding)
 
         return binding.root
     }
 
+//    override fun onResume() {
+//        super.onResume()
+//        initExample(binding)
+//        binding.refreshButton.setOnClickListener { b ->
+//             TODO: clear the surface and re-run initExample()
+//        }
+//    }
+
     private fun initExample(binding: AccessibilityExampleFragmentBinding) {
-        val xAxis: NumericAxis = NumericAxis(context).apply {
-            growBy = DoubleRange(0.1, 0.1)
-        }
-        val yAxis: NumericAxis = NumericAxis(context).apply {
-            growBy = DoubleRange(0.0, 0.1)
-        }
+        SciChartBuilder.init(context);
+        val sciChartBuilder: SciChartBuilder = SciChartBuilder.instance()
+
+//        val xAxis: NumericAxis = NumericAxis(context).apply {
+//            growBy = DoubleRange(0.1, 0.1)
+//        }
+//        val yAxis: NumericAxis = NumericAxis(context).apply {
+//            growBy = DoubleRange(0.0, 0.1)
+//        }
+        val xAxis: NumericAxis = sciChartBuilder
+            .newNumericAxis()
+            .withAxisTitle("X Axis Title")
+            .withGrowBy(0.1, 0.1)
+            .build()
+        val yAxis: NumericAxis = sciChartBuilder
+            .newNumericAxis()
+            .withAxisTitle("Y Axis Title")
+            .withGrowBy(0.0, 0.1)
+            .build()
 
         val surface: AccessibleSciChartSurface = binding.surface
         val nodes: ArrayList<INode> = surface.helper.nodes
 
-        val ds: IXyDataSeries<Int, Int> = XyDataSeries<Int, Int>(
+//        val ds: IXyDataSeries<Int, Int> = XyDataSeries<Int, Int>(
+//            Int::class.javaObjectType,
+//            Int::class.javaObjectType
+//        ).apply {
+//            seriesName = "Column chart"
+//        }
+        val ds: IXyDataSeries<Int, Int> = sciChartBuilder.newXyDataSeries<Int, Int>(
             Int::class.javaObjectType,
             Int::class.javaObjectType
-        ).apply {
-            seriesName = "Column chart"
-        }
+        )
+            .withSeriesName("Column chart")
+            .build()
+        val ds2: IXyDataSeries<Int, Int> = sciChartBuilder.newXyDataSeries<Int, Int>(
+            Int::class.javaObjectType,
+            Int::class.javaObjectType
+        )
+            .withSeriesName("Other chart")
+            .build()
 
         val yValues = intArrayOf(50, 35, 61, 58, 50, 50, 40, 53, 55, 23, 45, 12, 59, 60)
 
@@ -71,26 +108,68 @@ class AccessibilityExampleFragment : Fragment() {
             ds.append(i, yValue)
 
             nodes.add(ColumnPointNode(i, i.toDouble(), yValue.toDouble(), surface))
+            // Interleave the nodes for the two series:
+            // TalkBack reads each point in the second series immediately after the first series point with the same x-value
+            // (Note: Can't select the second series columns by touch -- must flick to them in order.
+            // Issue is likely with ColumnPointNode selection bounds.)
+            val yValue2 = yValue - Random.nextInt(10)
+            ds2.append(i, yValue2)
+            nodes.add(ColumnPointNode(yValues.size + i, i.toDouble(), yValue2.toDouble(), surface))
         }
+        // Add nodes for the second series after all of the nodes for the first series:
+        // TalkBack reads the second series points in order after all of the first series points.
+        // (Note: Can't select the second series columns by touch -- must flick to them in order.
+        // Issue is likely with ColumnPointNode selection bounds.)
+//        for (i in yValues.indices) {
+//            val yValue2 = yValues[i] - Random.nextInt(10)
+//            ds2.append(i, yValue2)
+//
+//            nodes.add(ColumnPointNode(yValues.size + i, i.toDouble(), yValue2.toDouble(), surface))
+//        }
 
-        val rSeries: FastColumnRenderableSeries = FastColumnRenderableSeries().apply {
-            strokeStyle = SolidPenStyle(ColorUtil.White, true, 1f.toDip(), null)
-            dataPointWidth = 0.7
-            fillBrushStyle = LinearGradientBrushStyle(
-                0f,
-                0f,
-                1f,
-                1f,
-                ColorUtil.LightSteelBlue,
-                ColorUtil.SteelBlue
-            )
-            dataSeries = ds
-        }
+        val rSeries: FastColumnRenderableSeries = sciChartBuilder.newColumnSeries()
+            .withStrokeStyle(ColorUtil.White, 1f, true)
+            .withDataPointWidth(0.7)
+            .withLinearGradientColors(ColorUtil.LightSteelBlue, ColorUtil.SteelBlue)
+            .withDataSeries(ds)
+            .build()
+
+        val r2Series: FastColumnRenderableSeries = sciChartBuilder.newColumnSeries()
+            .withStrokeStyle(ColorUtil.White, 1f, true)
+            .withDataPointWidth(0.7)
+            .withLinearGradientColors(ColorUtil.GreenYellow, ColorUtil.DarkOliveGreen)
+            .withDataSeries(ds2)
+            .build()
+
+//        val rSeries: FastColumnRenderableSeries = FastColumnRenderableSeries().apply {
+//            strokeStyle = SolidPenStyle(ColorUtil.White, true, 1f.toDip(), null)
+//            dataPointWidth = 0.7
+//            fillBrushStyle = LinearGradientBrushStyle(
+//                0f,
+//                0f,
+//                1f,
+//                1f,
+//                ColorUtil.LightSteelBlue,
+//                ColorUtil.SteelBlue
+//            )
+//            dataSeries = ds
+//        }
 
         UpdateSuspender.using(surface) {
             surface.xAxes.add(xAxis)
             surface.yAxes.add(yAxis)
+//            surface.xAxes.add(sciChartBuilder
+//                .newNumericAxis()
+//                .withAxisTitle("X Axis Title")
+//                .withGrowBy(0.1, 0.1)
+//                .build())
+//            surface.yAxes.add(sciChartBuilder
+//                .newNumericAxis()
+//                .withAxisTitle("Y Axis Title")
+//                .withGrowBy(0.0, 0.1)
+//                .build())
             surface.renderableSeries.add(rSeries)
+            surface.renderableSeries.add(r2Series)
             val pinchZoomModifier = AccessiblePinchZoomModifier()
             val zoomPanModifier = AccessibleZoomPanModifier().apply {
                 receiveHandledEvents = true

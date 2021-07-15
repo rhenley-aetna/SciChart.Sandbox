@@ -1,5 +1,6 @@
 package com.scichart.accessebility.helpers
 
+import android.os.Build
 import android.view.accessibility.AccessibilityNodeInfo
 import com.scichart.charting.visuals.SciChartSurface
 import com.scichart.charting.visuals.axes.NumericAxis
@@ -26,5 +27,8 @@ class AxisNode(private val axis: NumericAxis, id: Int) : NodeBase(id) {
         val text = String.format("%s with visible range from %s to %s", axisName, min, max)
         nodeInfo.text = text
         nodeInfo.contentDescription = text
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            nodeInfo.isHeading = true
+        }
     }
 }
